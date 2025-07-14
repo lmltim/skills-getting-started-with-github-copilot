@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const activitiesList = document.getElementById("activities-list");
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
@@ -12,32 +12,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      if (activitySelect) {
+        activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
+      }
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
-        const activityCard = document.createElement("div");
-        activityCard.className = "activity-card";
+        // Create card
+        const card = document.createElement("div");
+        card.className = "activity-card";
 
-        const spotsLeft = details.max_participants - details.participants.length;
+        // Title
+        const title = document.createElement("h4");
+        title.textContent = name;
+        card.appendChild(title);
 
-        activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
-        `;
+        // Description
+        const desc = document.createElement("p");
+        desc.textContent = details.description;
+        card.appendChild(desc);
 
-        activitiesList.appendChild(activityCard);
+        // Schedule
+        const sched = document.createElement("p");
+        sched.innerHTML = `<strong>Schedule:</strong> ${details.schedule}`;
+        card.appendChild(sched);
 
-        // Add option to select dropdown
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        activitySelect.appendChild(option);
+        // Max participants
+        const max = document.createElement("p");
+        max.innerHTML = `<strong>Max Participants:</strong> ${details.max_participants}`;
+        card.appendChild(max);
+
+        // Participants section
+        const partSection = document.createElement("div");
+        partSection.className = "participants-section";
+        const partTitle = document.createElement("p");
+        partTitle.innerHTML = `<strong>Participants:</strong>`;
+        partSection.appendChild(partTitle);
+
+        if (details.participants && details.participants.length > 0) {
+          const ul = document.createElement("ul");
+          ul.className = "participants-list";
+          details.participants.forEach(email => {
+            const li = document.createElement("li");
+            li.textContent = email;
+            ul.appendChild(li);
+          });
+          partSection.appendChild(ul);
+        } else {
+          const none = document.createElement("span");
+          none.className = "no-participants";
+          none.textContent = "No participants yet.";
+          partSection.appendChild(none);
+        }
+        card.appendChild(partSection);
+
+        activitiesList.appendChild(card);
+
+        // Add to select
+        if (activitySelect) {
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          activitySelect.appendChild(option);
+        }
       });
-    } catch (error) {
-      activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
-      console.error("Error fetching activities:", error);
+    } catch (err) {
+      activitiesList.innerHTML = "<p class='error'>Failed to load activities.</p>";
+      console.error("Error fetching activities:", err);
     }
   }
 
